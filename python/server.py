@@ -19,9 +19,9 @@ import os
 # ========================
 # 📧 EMAIL CONFIGURATION
 # ========================
-SENDER_EMAIL = "aniket63080@gmail.com"   
-SENDER_PASSWORD = "igph yzbl oczo fwwq" 
-MANAGER_EMAIL = "aniket63080@gmail.com" 
+SENDER_EMAIL = "ovinenterprises.main@gmail.com"   
+SENDER_PASSWORD = "ixlz wuhy uouu thiz" 
+MANAGER_EMAIL = "ovinenterprises.main@gmail.com" 
 
 # ========================
 # PATH SETUP
@@ -266,6 +266,7 @@ if __name__ == "__main__":
     threading.Thread(target=run_scraper_in_background, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
