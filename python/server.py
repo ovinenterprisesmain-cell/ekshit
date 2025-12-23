@@ -27,7 +27,7 @@ MANAGER_EMAIL = "aniket63080@gmail.com"
 # PATH SETUP
 # ========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PUBLIC_DIR = os.path.join(BASE_DIR, "..", "public")
+PUBLIC_DIR = os.path.join(BASE_DIR, "..", "python", "..", "public")
 BID_FILE_PATH = os.path.join(PUBLIC_DIR, "bid1.json")
 
 os.makedirs(PUBLIC_DIR, exist_ok=True)
@@ -266,3 +266,4 @@ if __name__ == "__main__":
     threading.Thread(target=run_scraper_in_background, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
