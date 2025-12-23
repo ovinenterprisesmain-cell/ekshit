@@ -46,6 +46,9 @@ def get_data():
             data = json.load(file)
         return jsonify(data)
     except FileNotFoundError:
+        print(BID_FILE_PATH)
+        print(PUBLIC_DIR)
+        print(BASE_DIR)
         return jsonify({"error": "bid1.json not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -266,4 +269,5 @@ if __name__ == "__main__":
     threading.Thread(target=run_scraper_in_background, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
