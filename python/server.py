@@ -1162,85 +1162,286 @@
 
 
 
+# from flask import Flask, jsonify, request, Response
+# from flask_cors import CORS
+# import json, os, time, requests, smtplib
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
+# from selenium import webdriver
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
+
+# # ========================
+# # 🔐 ENV CONFIG (RENDER SAFE)
+# # ========================
+# # SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
+# # SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
+# # MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL")
+# SENDER_EMAIL = "ovinenterprises.main@gmail.com"   
+# SENDER_PASSWORD = "ixlz wuhy uouu thiz" 
+# MANAGER_EMAIL = "ovinenterprises.main@gmail.com" 
+
+
+# if not all([SENDER_EMAIL, SENDER_PASSWORD, MANAGER_EMAIL]):
+#     raise RuntimeError("❌ Email environment variables missing")
+
+# # ========================
+# # 📁 PATH SETUP
+# # ========================
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+# BID_FILE_PATH = os.path.join(PUBLIC_DIR, "bid1.json")
+# os.makedirs(PUBLIC_DIR, exist_ok=True)
+
+# # ========================
+# # 🚀 FLASK SETUP
+# # ========================
+# app = Flask(__name__)
+# CORS(app)
+
+# # ========================
+# # 📦 BID DATA API
+# # ========================
+# @app.route("/api/data", methods=["GET"])
+# def get_data():
+#     try:
+#         with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
+#             return jsonify(json.load(f))
+#     except FileNotFoundError:
+#         return jsonify([]), 200
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+# # ========================
+# # 📄 PDF PROXY
+# # ========================
+# @app.route("/api/proxy-pdf", methods=["GET"])
+# def proxy_pdf():
+#     pdf_url = request.args.get("url")
+#     if not pdf_url:
+#         return jsonify({"error": "URL required"}), 400
+
+#     try:
+#         r = requests.get(pdf_url, headers={"User-Agent": "Mozilla/5.0"}, stream=True, timeout=15)
+#         return Response(r.iter_content(1024), content_type="application/pdf")
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+# # ========================
+# # 📩 CONTACT FORM
+# # ========================
+# @app.route("/api/contact", methods=["POST"])
+# def contact():
+#     data = request.json
+#     required = ["name", "email", "phone", "message"]
+
+#     if not all(data.get(k) for k in required):
+#         return jsonify({"error": "All fields required"}), 400
+
+#     subject = f"📩 Inquiry from {data['name']}"
+#     body = f"""
+# Name: {data['name']}
+# Email: {data['email']}
+# Phone: {data['phone']}
+
+# Message:
+# {data['message']}
+# """
+
+#     try:
+#         send_email(subject, body)
+#         return jsonify({"message": "Email sent"}), 200
+#     except Exception:
+#         return jsonify({"error": "Email service failed"}), 500
+
+# # ========================
+# # 📱 PHONE NUMBER API (FIXED)
+# # ========================
+# @app.route("/api/update-phone", methods=["POST"])
+# def update_phone():
+#     data = request.json
+#     email = data.get("email")
+#     phone = data.get("phone")
+
+#     if not email:
+#         return jsonify({"error": "Email required"}), 400
+
+#     if not phone or not phone.isdigit() or len(phone) != 10:
+#         return jsonify({"error": "Invalid phone number"}), 400
+
+#     subject = "📱 Mandatory Phone Number Submitted"
+#     body = f"""
+# User completed phone verification.
+
+# Email: {email}
+# Phone: {phone}
+# """
+
+#     try:
+#         send_email(subject, body)
+#         return jsonify({"message": "Phone number saved"}), 200
+#     except Exception:
+#         return jsonify({"error": "Email service failed"}), 500
+
+# # ========================
+# # ✉️ EMAIL SENDER (RENDER SAFE)
+# # ========================
+# def send_email(subject, body):
+#     msg = MIMEMultipart()
+#     msg["From"] = SENDER_EMAIL
+#     msg["To"] = MANAGER_EMAIL
+#     msg["Subject"] = subject
+#     msg.attach(MIMEText(body, "plain"))
+
+#     server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
+#     server.starttls()
+#     server.login(SENDER_EMAIL, SENDER_PASSWORD)
+#     server.send_message(msg)
+#     server.quit()
+
+# # ========================
+# # 🤖 SCRAPER (MANUAL RUN ONLY)
+# # ========================
+# @app.route("/api/scrape", methods=["POST"])
+# def scrape():
+#     try:
+#         chrome_options = Options()
+#         chrome_options.add_argument("--headless=new")
+#         chrome_options.add_argument("--no-sandbox")
+#         chrome_options.add_argument("--disable-dev-shm-usage")
+
+#         driver = webdriver.Chrome(options=chrome_options)
+#         wait = WebDriverWait(driver, 15)
+
+#         driver.get("https://bidplus.gem.gov.in/all-bids")
+#         time.sleep(3)
+
+#         bids = []
+
+#         wait.until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="bidCard"]/div')))
+#         cards = driver.find_elements(By.XPATH, '//*[@id="bidCard"]/div')[:10]
+
+#         for card in cards:
+#             bids.append({
+#                 "bid_no": card.find_element(By.XPATH, ".//p[1]/a").text.strip(),
+#                 "bid_link": card.find_element(By.XPATH, ".//p[1]/a").get_attribute("href"),
+#             })
+
+#         with open(BID_FILE_PATH, "w", encoding="utf-8") as f:
+#             json.dump(bids, f, indent=4)
+
+#         driver.quit()
+#         return jsonify({"message": "Scraped successfully"}), 200
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+# # ========================
+# # 🚀 MAIN
+# # ========================
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=5000)
+
+
+
+
+
+
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
-import json, os, time, requests, smtplib
+import os
+import json
+import requests
+import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
-# ========================
-# 🔐 ENV CONFIG (RENDER SAFE)
-# ========================
-# SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
-# SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
-# MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL")
-SENDER_EMAIL = "ovinenterprises.main@gmail.com"   
-SENDER_PASSWORD = "ixlz wuhy uouu thiz" 
-MANAGER_EMAIL = "ovinenterprises.main@gmail.com" 
+# =====================================================
+# 🔐 EMAIL CONFIG (WORKS ON RENDER)
+# =====================================================
+# ⚠️ For production, move these to Render Environment Variables
+SENDER_EMAIL = "ovinenterprises.main@gmail.com"
+SENDER_PASSWORD = "ixlz wuhy uouu thiz"
+MANAGER_EMAIL = "ovinenterprises.main@gmail.com"
 
-
-if not all([SENDER_EMAIL, SENDER_PASSWORD, MANAGER_EMAIL]):
-    raise RuntimeError("❌ Email environment variables missing")
-
-# ========================
-# 📁 PATH SETUP
-# ========================
+# =====================================================
+# 📁 FILE PATH SETUP
+# =====================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 BID_FILE_PATH = os.path.join(PUBLIC_DIR, "bid1.json")
+
 os.makedirs(PUBLIC_DIR, exist_ok=True)
 
-# ========================
-# 🚀 FLASK SETUP
-# ========================
+# =====================================================
+# 🚀 FLASK APP SETUP
+# =====================================================
 app = Flask(__name__)
-CORS(app)
 
-# ========================
-# 📦 BID DATA API
-# ========================
+# ✅ Proper CORS for frontend hosted on another domain
+CORS(
+    app,
+    resources={r"/api/*": {"origins": "*"}},
+    supports_credentials=True
+)
+
+# =====================================================
+# 📦 GET BID DATA
+# =====================================================
 @app.route("/api/data", methods=["GET"])
 def get_data():
     try:
-        with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
-            return jsonify(json.load(f))
-    except FileNotFoundError:
-        return jsonify([]), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        if not os.path.exists(BID_FILE_PATH):
+            return jsonify([]), 200
 
-# ========================
+        with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
+            return jsonify(json.load(f)), 200
+
+    except Exception as e:
+        print("❌ DATA ERROR:", e)
+        return jsonify({"error": "Failed to load data"}), 500
+
+# =====================================================
 # 📄 PDF PROXY
-# ========================
+# =====================================================
 @app.route("/api/proxy-pdf", methods=["GET"])
 def proxy_pdf():
     pdf_url = request.args.get("url")
+
     if not pdf_url:
-        return jsonify({"error": "URL required"}), 400
+        return jsonify({"error": "PDF URL required"}), 400
 
     try:
-        r = requests.get(pdf_url, headers={"User-Agent": "Mozilla/5.0"}, stream=True, timeout=15)
-        return Response(r.iter_content(1024), content_type="application/pdf")
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        response = requests.get(
+            pdf_url,
+            headers={"User-Agent": "Mozilla/5.0"},
+            stream=True,
+            timeout=15
+        )
 
-# ========================
-# 📩 CONTACT FORM
-# ========================
+        return Response(
+            response.iter_content(chunk_size=1024),
+            content_type="application/pdf"
+        )
+
+    except Exception as e:
+        print("❌ PDF ERROR:", e)
+        return jsonify({"error": "Unable to fetch PDF"}), 500
+
+# =====================================================
+# 📩 CONTACT FORM API
+# =====================================================
 @app.route("/api/contact", methods=["POST"])
 def contact():
     data = request.json
-    required = ["name", "email", "phone", "message"]
 
-    if not all(data.get(k) for k in required):
-        return jsonify({"error": "All fields required"}), 400
+    required_fields = ["name", "email", "phone", "message"]
+    if not all(data.get(field) for field in required_fields):
+        return jsonify({"error": "All fields are required"}), 400
 
-    subject = f"📩 Inquiry from {data['name']}"
+    subject = f"📩 New Inquiry from {data['name']}"
     body = f"""
 Name: {data['name']}
 Email: {data['email']}
@@ -1252,28 +1453,31 @@ Message:
 
     try:
         send_email(subject, body)
-        return jsonify({"message": "Email sent"}), 200
-    except Exception:
+        return jsonify({"message": "Email sent successfully"}), 200
+
+    except Exception as e:
+        print("❌ EMAIL ERROR:", e)
         return jsonify({"error": "Email service failed"}), 500
 
-# ========================
-# 📱 PHONE NUMBER API (FIXED)
-# ========================
+# =====================================================
+# 📱 PHONE NUMBER UPDATE API (FINAL FIX)
+# =====================================================
 @app.route("/api/update-phone", methods=["POST"])
 def update_phone():
     data = request.json
+
     email = data.get("email")
     phone = data.get("phone")
 
     if not email:
-        return jsonify({"error": "Email required"}), 400
+        return jsonify({"error": "Email is required"}), 400
 
     if not phone or not phone.isdigit() or len(phone) != 10:
         return jsonify({"error": "Invalid phone number"}), 400
 
-    subject = "📱 Mandatory Phone Number Submitted"
+    subject = "📱 Phone Number Verification Completed"
     body = f"""
-User completed phone verification.
+A user has completed phone verification.
 
 Email: {email}
 Phone: {phone}
@@ -1281,13 +1485,15 @@ Phone: {phone}
 
     try:
         send_email(subject, body)
-        return jsonify({"message": "Phone number saved"}), 200
-    except Exception:
-        return jsonify({"error": "Email service failed"}), 500
+        return jsonify({"message": "Phone number saved successfully"}), 200
 
-# ========================
-# ✉️ EMAIL SENDER (RENDER SAFE)
-# ========================
+    except Exception as e:
+        print("❌ PHONE EMAIL ERROR:", e)
+        return jsonify({"error": "Failed to save phone number"}), 500
+
+# =====================================================
+# ✉️ EMAIL SENDER (SIMPLE + STABLE)
+# =====================================================
 def send_email(subject, body):
     msg = MIMEMultipart()
     msg["From"] = SENDER_EMAIL
@@ -1301,46 +1507,8 @@ def send_email(subject, body):
     server.send_message(msg)
     server.quit()
 
-# ========================
-# 🤖 SCRAPER (MANUAL RUN ONLY)
-# ========================
-@app.route("/api/scrape", methods=["POST"])
-def scrape():
-    try:
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-
-        driver = webdriver.Chrome(options=chrome_options)
-        wait = WebDriverWait(driver, 15)
-
-        driver.get("https://bidplus.gem.gov.in/all-bids")
-        time.sleep(3)
-
-        bids = []
-
-        wait.until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="bidCard"]/div')))
-        cards = driver.find_elements(By.XPATH, '//*[@id="bidCard"]/div')[:10]
-
-        for card in cards:
-            bids.append({
-                "bid_no": card.find_element(By.XPATH, ".//p[1]/a").text.strip(),
-                "bid_link": card.find_element(By.XPATH, ".//p[1]/a").get_attribute("href"),
-            })
-
-        with open(BID_FILE_PATH, "w", encoding="utf-8") as f:
-            json.dump(bids, f, indent=4)
-
-        driver.quit()
-        return jsonify({"message": "Scraped successfully"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ========================
-# 🚀 MAIN
-# ========================
+# =====================================================
+# 🚀 APP START
+# =====================================================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
