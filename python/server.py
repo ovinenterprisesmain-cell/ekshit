@@ -883,41 +883,316 @@
 
 
 
+# from flask import Flask, jsonify, request, Response
+# import json
+# import threading
+# import time
+# import requests
+# import smtplib
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
+# from selenium import webdriver
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.common.action_chains import ActionChains
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
+# from flask_cors import CORS
+# import os
+
+# # ========================
+# # 📧 EMAIL CONFIGURATION (DO NOT CHANGE)
+# # ========================
+# SENDER_EMAIL = "ovinenterprises.main@gmail.com"   
+# SENDER_PASSWORD = "ixlz wuhy uouu thiz" 
+# MANAGER_EMAIL = "ovinenterprises.main@gmail.com" 
+
+# # ========================
+# # PATH SETUP
+# # ========================
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# PUBLIC_DIR = os.path.join(BASE_DIR, "..", "public")
+# BID_FILE_PATH = os.path.join(PUBLIC_DIR, "bid1.json")
+
+# os.makedirs(PUBLIC_DIR, exist_ok=True)
+
+# # ========================
+# # FLASK SETUP
+# # ========================
+# app = Flask(__name__)
+# CORS(app)
+
+# # ========================
+# # 📦 BID DATA API
+# # ========================
+# @app.route("/api/data", methods=["GET"])
+# def get_data():
+#     try:
+#         with open(BID_FILE_PATH, "r", encoding="utf-8") as file:
+#             return jsonify(json.load(file))
+#     except FileNotFoundError:
+#         return jsonify({"error": "bid1.json not found"}), 404
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+# # ========================
+# # 📄 PDF PROXY API
+# # ========================
+# @app.route("/api/proxy-pdf", methods=["GET"])
+# def proxy_pdf():
+#     pdf_url = request.args.get("url")
+#     if not pdf_url:
+#         return jsonify({"error": "No URL provided"}), 400
+
+#     try:
+#         headers = {"User-Agent": "Mozilla/5.0"}
+#         resp = requests.get(pdf_url, headers=headers, stream=True)
+#         return Response(resp.iter_content(1024), content_type="application/pdf")
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+# # ========================
+# # 📩 CONTACT API
+# # ========================
+# @app.route("/api/contact", methods=["POST"])
+# def send_email():
+#     data = request.json
+
+#     name = data.get("name")
+#     user_email = data.get("email")
+#     phone = data.get("phone")
+#     message = data.get("message")
+
+#     bid_no = data.get("bid_no", "General Inquiry")
+#     bid_name = data.get("bid_name", "N/A")
+
+#     if not all([name, user_email, phone, message]):
+#         return jsonify({"error": "All fields are required"}), 400
+
+#     if bid_no != "General Inquiry":
+#         subject = f"🔔 Bid Inquiry: {bid_no} (from {name})"
+#         body = f"""
+# Hello Manager,
+
+# A user wants to PARTICIPATE in a Bid.
+
+# Bid No: {bid_no}
+# Item Name: {bid_name}
+
+# Name: {name}
+# Phone: {phone}
+# Email: {user_email}
+
+# Message:
+# {message}
+# """
+#     else:
+#         subject = f"📩 New General Inquiry from {name}"
+#         body = f"""
+# Hello Manager,
+
+# New contact inquiry received.
+
+# Name: {name}
+# Phone: {phone}
+# Email: {user_email}
+
+# Message:
+# {message}
+# """
+
+#     try:
+#         msg = MIMEMultipart()
+#         msg["From"] = SENDER_EMAIL
+#         msg["To"] = MANAGER_EMAIL
+#         msg["Subject"] = subject
+#         msg.attach(MIMEText(body, "plain"))
+
+#         server = smtplib.SMTP("smtp.gmail.com", 587)
+#         server.starttls()
+#         server.login(SENDER_EMAIL, SENDER_PASSWORD)
+#         server.send_message(msg)
+#         server.quit()
+
+#         return jsonify({"message": "Email sent successfully"}), 200
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+# # ======================================================
+# # ✅ UPDATED PHONE NUMBER LOGIC (FROM SECOND CODE)
+# # ======================================================
+
+# def send_async_email(user_email, phone):
+#     """Runs in background to avoid blocking frontend"""
+#     try:
+#         subject = f"📱 New Mandatory Phone Number: {user_email}"
+#         body = f"""
+# Hello Admin,
+
+# A user has completed the mandatory phone number verification step.
+
+# User Details:
+# --------------------------------------
+# Email:  {user_email}
+# Phone:  {phone}
+# --------------------------------------
+
+# Please update your records accordingly.
+# """
+
+#         msg = MIMEMultipart()
+#         msg["From"] = SENDER_EMAIL
+#         msg["To"] = MANAGER_EMAIL
+#         msg["Subject"] = subject
+#         msg.attach(MIMEText(body, "plain"))
+
+#         server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
+#         server.starttls()
+#         server.login(SENDER_EMAIL, SENDER_PASSWORD)
+#         server.send_message(msg)
+#         server.quit()
+
+#         print(f"✅ [Background] Phone email sent for {user_email}")
+
+#     except Exception as e:
+#         print(f"❌ [Background] Phone email failed: {e}")
+
+# @app.route("/api/update-phone", methods=["POST"])
+# def update_phone_number():
+#     data = request.json
+#     user_email = data.get("email")
+#     phone = data.get("phone")
+
+#     if not phone or not str(phone).isdigit() or len(str(phone)) != 10:
+#         return jsonify({"error": "Invalid Phone Number. Must be exactly 10 digits."}), 400
+
+#     if not user_email:
+#         return jsonify({"error": "Email is required"}), 400
+
+#     threading.Thread(
+#         target=send_async_email,
+#         args=(user_email, phone),
+#         daemon=True
+#     ).start()
+
+#     print(f"✅ Phone request accepted for {user_email}: {phone}")
+#     return jsonify({"message": "Phone number saved successfully!"}), 200
+
+# # ========================
+# # 🤖 SCRAPER (UNCHANGED)
+# # ========================
+# def scrape_data():
+#     chrome_options = Options()
+#     chrome_options.add_argument("--headless")
+#     chrome_options.add_argument("--no-sandbox")
+#     chrome_options.add_argument("--disable-dev-shm-usage")
+
+#     driver = webdriver.Chrome(options=chrome_options)
+#     wait = WebDriverWait(driver, 10)
+
+#     try:
+#         driver.get("https://bidplus.gem.gov.in/all-bids")
+#         time.sleep(3)
+
+#         data_list = []
+#         if os.path.exists(BID_FILE_PATH):
+#             with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
+#                 try:
+#                     data_list = json.load(f)
+#                 except:
+#                     pass
+
+#         for page in range(1, 3701):
+#             print(f"📄 Page {page}")
+
+#             wait.until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="bidCard"]/div')))
+#             cards = driver.find_elements(By.XPATH, '//*[@id="bidCard"]/div')[:10]
+
+#             for card in cards:
+#                 try:
+#                     bid_no = card.find_element(By.XPATH, ".//p[1]/a").text.strip()
+#                     if any(b["bid_no"] == bid_no for b in data_list):
+#                         continue
+
+#                     data_list.append({
+#                         "page": page,
+#                         "bid_no": bid_no,
+#                         "bid_link": card.find_element(By.XPATH, ".//p[1]/a").get_attribute("href"),
+#                         "items": card.find_element(By.XPATH, ".//div[3]/div/div[1]/div[1]/a").text.strip(),
+#                         "quantity": card.find_element(By.XPATH, ".//div[3]/div/div[1]/div[2]").text.strip(),
+#                         "department_name": card.find_element(By.XPATH, ".//div[3]/div/div[2]/div[2]").text.strip(),
+#                         "start_date": card.find_element(By.XPATH, ".//div[3]/div/div[3]/div[1]/span").text.strip(),
+#                         "end_date": card.find_element(By.XPATH, ".//div[3]/div/div[3]/div[2]/span").text.strip(),
+#                     })
+
+#                 except:
+#                     pass
+
+#             with open(BID_FILE_PATH, "w", encoding="utf-8") as f:
+#                 json.dump(data_list, f, indent=4, ensure_ascii=False)
+
+#             next_btn = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="light-pagination"]/a[10]')))
+#             ActionChains(driver).move_to_element(next_btn).click().perform()
+#             time.sleep(2)
+
+#     finally:
+#         driver.quit()
+
+# # ========================
+# # 🔁 SCRAPER BACKGROUND
+# # ========================
+# def run_scraper_in_background():
+#     while True:
+#         scrape_data()
+#         time.sleep(3600)
+
+# # ========================
+# # 🚀 MAIN
+# # ========================
+# if __name__ == "__main__":
+#     threading.Thread(target=run_scraper_in_background, daemon=True).start()
+#     print("🚀 Server running on http://127.0.0.1:5000")
+#     app.run(debug=True)
+
+
+
+
+
+
+
+
 from flask import Flask, jsonify, request, Response
-import json
-import threading
-import time
-import requests
-import smtplib
+from flask_cors import CORS
+import json, os, time, requests, smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from flask_cors import CORS
-import os
 
 # ========================
-# 📧 EMAIL CONFIGURATION (DO NOT CHANGE)
+# 🔐 ENV CONFIG (RENDER SAFE)
 # ========================
-SENDER_EMAIL = "ovinenterprises.main@gmail.com"   
-SENDER_PASSWORD = "ixlz wuhy uouu thiz" 
-MANAGER_EMAIL = "ovinenterprises.main@gmail.com" 
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
+SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
+MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL")
+
+if not all([SENDER_EMAIL, SENDER_PASSWORD, MANAGER_EMAIL]):
+    raise RuntimeError("❌ Email environment variables missing")
 
 # ========================
-# PATH SETUP
+# 📁 PATH SETUP
 # ========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PUBLIC_DIR = os.path.join(BASE_DIR, "..", "public")
+PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 BID_FILE_PATH = os.path.join(PUBLIC_DIR, "bid1.json")
-
 os.makedirs(PUBLIC_DIR, exist_ok=True)
 
 # ========================
-# FLASK SETUP
+# 🚀 FLASK SETUP
 # ========================
 app = Flask(__name__)
 CORS(app)
@@ -928,229 +1203,139 @@ CORS(app)
 @app.route("/api/data", methods=["GET"])
 def get_data():
     try:
-        with open(BID_FILE_PATH, "r", encoding="utf-8") as file:
-            return jsonify(json.load(file))
+        with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
+            return jsonify(json.load(f))
     except FileNotFoundError:
-        return jsonify({"error": "bid1.json not found"}), 404
+        return jsonify([]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # ========================
-# 📄 PDF PROXY API
+# 📄 PDF PROXY
 # ========================
 @app.route("/api/proxy-pdf", methods=["GET"])
 def proxy_pdf():
     pdf_url = request.args.get("url")
     if not pdf_url:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({"error": "URL required"}), 400
 
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        resp = requests.get(pdf_url, headers=headers, stream=True)
-        return Response(resp.iter_content(1024), content_type="application/pdf")
+        r = requests.get(pdf_url, headers={"User-Agent": "Mozilla/5.0"}, stream=True, timeout=15)
+        return Response(r.iter_content(1024), content_type="application/pdf")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # ========================
-# 📩 CONTACT API
+# 📩 CONTACT FORM
 # ========================
 @app.route("/api/contact", methods=["POST"])
-def send_email():
+def contact():
     data = request.json
+    required = ["name", "email", "phone", "message"]
 
-    name = data.get("name")
-    user_email = data.get("email")
-    phone = data.get("phone")
-    message = data.get("message")
+    if not all(data.get(k) for k in required):
+        return jsonify({"error": "All fields required"}), 400
 
-    bid_no = data.get("bid_no", "General Inquiry")
-    bid_name = data.get("bid_name", "N/A")
-
-    if not all([name, user_email, phone, message]):
-        return jsonify({"error": "All fields are required"}), 400
-
-    if bid_no != "General Inquiry":
-        subject = f"🔔 Bid Inquiry: {bid_no} (from {name})"
-        body = f"""
-Hello Manager,
-
-A user wants to PARTICIPATE in a Bid.
-
-Bid No: {bid_no}
-Item Name: {bid_name}
-
-Name: {name}
-Phone: {phone}
-Email: {user_email}
+    subject = f"📩 Inquiry from {data['name']}"
+    body = f"""
+Name: {data['name']}
+Email: {data['email']}
+Phone: {data['phone']}
 
 Message:
-{message}
-"""
-    else:
-        subject = f"📩 New General Inquiry from {name}"
-        body = f"""
-Hello Manager,
-
-New contact inquiry received.
-
-Name: {name}
-Phone: {phone}
-Email: {user_email}
-
-Message:
-{message}
+{data['message']}
 """
 
     try:
-        msg = MIMEMultipart()
-        msg["From"] = SENDER_EMAIL
-        msg["To"] = MANAGER_EMAIL
-        msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
+        send_email(subject, body)
+        return jsonify({"message": "Email sent"}), 200
+    except Exception:
+        return jsonify({"error": "Email service failed"}), 500
 
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-
-        return jsonify({"message": "Email sent successfully"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ======================================================
-# ✅ UPDATED PHONE NUMBER LOGIC (FROM SECOND CODE)
-# ======================================================
-
-def send_async_email(user_email, phone):
-    """Runs in background to avoid blocking frontend"""
-    try:
-        subject = f"📱 New Mandatory Phone Number: {user_email}"
-        body = f"""
-Hello Admin,
-
-A user has completed the mandatory phone number verification step.
-
-User Details:
---------------------------------------
-Email:  {user_email}
-Phone:  {phone}
---------------------------------------
-
-Please update your records accordingly.
-"""
-
-        msg = MIMEMultipart()
-        msg["From"] = SENDER_EMAIL
-        msg["To"] = MANAGER_EMAIL
-        msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
-
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=15)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-
-        print(f"✅ [Background] Phone email sent for {user_email}")
-
-    except Exception as e:
-        print(f"❌ [Background] Phone email failed: {e}")
-
+# ========================
+# 📱 PHONE NUMBER API (FIXED)
+# ========================
 @app.route("/api/update-phone", methods=["POST"])
-def update_phone_number():
+def update_phone():
     data = request.json
-    user_email = data.get("email")
+    email = data.get("email")
     phone = data.get("phone")
 
-    if not phone or not str(phone).isdigit() or len(str(phone)) != 10:
-        return jsonify({"error": "Invalid Phone Number. Must be exactly 10 digits."}), 400
+    if not email:
+        return jsonify({"error": "Email required"}), 400
 
-    if not user_email:
-        return jsonify({"error": "Email is required"}), 400
+    if not phone or not phone.isdigit() or len(phone) != 10:
+        return jsonify({"error": "Invalid phone number"}), 400
 
-    threading.Thread(
-        target=send_async_email,
-        args=(user_email, phone),
-        daemon=True
-    ).start()
+    subject = "📱 Mandatory Phone Number Submitted"
+    body = f"""
+User completed phone verification.
 
-    print(f"✅ Phone request accepted for {user_email}: {phone}")
-    return jsonify({"message": "Phone number saved successfully!"}), 200
-
-# ========================
-# 🤖 SCRAPER (UNCHANGED)
-# ========================
-def scrape_data():
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-
-    driver = webdriver.Chrome(options=chrome_options)
-    wait = WebDriverWait(driver, 10)
+Email: {email}
+Phone: {phone}
+"""
 
     try:
+        send_email(subject, body)
+        return jsonify({"message": "Phone number saved"}), 200
+    except Exception:
+        return jsonify({"error": "Email service failed"}), 500
+
+# ========================
+# ✉️ EMAIL SENDER (RENDER SAFE)
+# ========================
+def send_email(subject, body):
+    msg = MIMEMultipart()
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = MANAGER_EMAIL
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
+    server.starttls()
+    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+    server.send_message(msg)
+    server.quit()
+
+# ========================
+# 🤖 SCRAPER (MANUAL RUN ONLY)
+# ========================
+@app.route("/api/scrape", methods=["POST"])
+def scrape():
+    try:
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+
+        driver = webdriver.Chrome(options=chrome_options)
+        wait = WebDriverWait(driver, 15)
+
         driver.get("https://bidplus.gem.gov.in/all-bids")
         time.sleep(3)
 
-        data_list = []
-        if os.path.exists(BID_FILE_PATH):
-            with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
-                try:
-                    data_list = json.load(f)
-                except:
-                    pass
+        bids = []
 
-        for page in range(1, 3701):
-            print(f"📄 Page {page}")
+        wait.until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="bidCard"]/div')))
+        cards = driver.find_elements(By.XPATH, '//*[@id="bidCard"]/div')[:10]
 
-            wait.until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="bidCard"]/div')))
-            cards = driver.find_elements(By.XPATH, '//*[@id="bidCard"]/div')[:10]
+        for card in cards:
+            bids.append({
+                "bid_no": card.find_element(By.XPATH, ".//p[1]/a").text.strip(),
+                "bid_link": card.find_element(By.XPATH, ".//p[1]/a").get_attribute("href"),
+            })
 
-            for card in cards:
-                try:
-                    bid_no = card.find_element(By.XPATH, ".//p[1]/a").text.strip()
-                    if any(b["bid_no"] == bid_no for b in data_list):
-                        continue
+        with open(BID_FILE_PATH, "w", encoding="utf-8") as f:
+            json.dump(bids, f, indent=4)
 
-                    data_list.append({
-                        "page": page,
-                        "bid_no": bid_no,
-                        "bid_link": card.find_element(By.XPATH, ".//p[1]/a").get_attribute("href"),
-                        "items": card.find_element(By.XPATH, ".//div[3]/div/div[1]/div[1]/a").text.strip(),
-                        "quantity": card.find_element(By.XPATH, ".//div[3]/div/div[1]/div[2]").text.strip(),
-                        "department_name": card.find_element(By.XPATH, ".//div[3]/div/div[2]/div[2]").text.strip(),
-                        "start_date": card.find_element(By.XPATH, ".//div[3]/div/div[3]/div[1]/span").text.strip(),
-                        "end_date": card.find_element(By.XPATH, ".//div[3]/div/div[3]/div[2]/span").text.strip(),
-                    })
-
-                except:
-                    pass
-
-            with open(BID_FILE_PATH, "w", encoding="utf-8") as f:
-                json.dump(data_list, f, indent=4, ensure_ascii=False)
-
-            next_btn = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="light-pagination"]/a[10]')))
-            ActionChains(driver).move_to_element(next_btn).click().perform()
-            time.sleep(2)
-
-    finally:
         driver.quit()
+        return jsonify({"message": "Scraped successfully"}), 200
 
-# ========================
-# 🔁 SCRAPER BACKGROUND
-# ========================
-def run_scraper_in_background():
-    while True:
-        scrape_data()
-        time.sleep(3600)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ========================
 # 🚀 MAIN
 # ========================
 if __name__ == "__main__":
-    threading.Thread(target=run_scraper_in_background, daemon=True).start()
-    print("🚀 Server running on http://127.0.0.1:5000")
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
