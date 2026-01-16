@@ -1176,9 +1176,13 @@ from selenium.webdriver.support import expected_conditions as EC
 # ========================
 # 🔐 ENV CONFIG (RENDER SAFE)
 # ========================
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
-SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
-MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL")
+# SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
+# SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
+# MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL")
+SENDER_EMAIL = "ovinenterprises.main@gmail.com"   
+SENDER_PASSWORD = "ixlz wuhy uouu thiz" 
+MANAGER_EMAIL = "ovinenterprises.main@gmail.com" 
+
 
 if not all([SENDER_EMAIL, SENDER_PASSWORD, MANAGER_EMAIL]):
     raise RuntimeError("❌ Email environment variables missing")
@@ -1339,3 +1343,4 @@ def scrape():
 # ========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
