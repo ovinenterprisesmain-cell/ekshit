@@ -1390,126 +1390,220 @@ CORS(
 # =====================================================
 # 📦 GET BID DATA
 # =====================================================
-@app.route("/api/data", methods=["GET"])
-def get_data():
+# @app.route("/api/data", methods=["GET"])
+# def get_data():
+#     try:
+#         if not os.path.exists(BID_FILE_PATH):
+#             return jsonify([]), 200
+
+#         with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
+#             return jsonify(json.load(f)), 200
+
+#     except Exception as e:
+#         print("❌ DATA ERROR:", e)
+#         return jsonify({"error": "Failed to load data"}), 500
+
+# # =====================================================
+# # 📄 PDF PROXY
+# # =====================================================
+# @app.route("/api/proxy-pdf", methods=["GET"])
+# def proxy_pdf():
+#     pdf_url = request.args.get("url")
+
+#     if not pdf_url:
+#         return jsonify({"error": "PDF URL required"}), 400
+
+#     try:
+#         response = requests.get(
+#             pdf_url,
+#             headers={"User-Agent": "Mozilla/5.0"},
+#             stream=True,
+#             timeout=15
+#         )
+
+#         return Response(
+#             response.iter_content(chunk_size=1024),
+#             content_type="application/pdf"
+#         )
+
+#     except Exception as e:
+#         print("❌ PDF ERROR:", e)
+#         return jsonify({"error": "Unable to fetch PDF"}), 500
+
+# # =====================================================
+# # 📩 CONTACT FORM API
+# # =====================================================
+# @app.route("/api/contact", methods=["POST"])
+# def contact():
+#     data = request.json
+
+#     required_fields = ["name", "email", "phone", "message"]
+#     if not all(data.get(field) for field in required_fields):
+#         return jsonify({"error": "All fields are required"}), 400
+
+#     subject = f"📩 New Inquiry from {data['name']}"
+#     body = f"""
+# Name: {data['name']}
+# Email: {data['email']}
+# Phone: {data['phone']}
+
+# Message:
+# {data['message']}
+# """
+
+#     try:
+#         send_email(subject, body)
+#         return jsonify({"message": "Email sent successfully"}), 200
+
+#     except Exception as e:
+#         print("❌ EMAIL ERROR:", e)
+#         return jsonify({"error": "Email service failed"}), 500
+
+# # =====================================================
+# # 📱 PHONE NUMBER UPDATE API (FINAL FIX)
+# # =====================================================
+# @app.route("/api/update-phone", methods=["POST"])
+# def update_phone():
+#     data = request.json
+
+#     email = data.get("email")
+#     phone = data.get("phone")
+
+#     if not email:
+#         return jsonify({"error": "Email is required"}), 400
+
+#     if not phone or not phone.isdigit() or len(phone) != 10:
+#         return jsonify({"error": "Invalid phone number"}), 400
+
+#     subject = "📱 Phone Number Verification Completed"
+#     body = f"""
+# A user has completed phone verification.
+
+# Email: {email}
+# Phone: {phone}
+# """
+
+#     try:
+#         send_email(subject, body)
+#         return jsonify({"message": "Phone number saved successfully"}), 200
+
+#     except Exception as e:
+#         print("❌ PHONE EMAIL ERROR:", e)
+#         return jsonify({"error": "Failed to save phone number"}), 500
+
+# # =====================================================
+# # ✉️ EMAIL SENDER (SIMPLE + STABLE)
+# # =====================================================
+# def send_email(subject, body):
+#     msg = MIMEMultipart()
+#     msg["From"] = SENDER_EMAIL
+#     msg["To"] = MANAGER_EMAIL
+#     msg["Subject"] = subject
+#     msg.attach(MIMEText(body, "plain"))
+
+#     server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
+#     server.starttls()
+#     server.login(SENDER_EMAIL, SENDER_PASSWORD)
+#     server.send_message(msg)
+#     server.quit()
+
+# # =====================================================
+# # 🚀 APP START
+# # =====================================================
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=5000)
+
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import threading
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+
+# ========================
+# FLASK APP SETUP
+# ========================
+app = Flask(__name__)
+CORS(app)
+
+# ========================
+# EMAIL CONFIG (FROM RENDER ENV)
+# ========================
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
+SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
+MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL")
+
+# ========================
+# BACKGROUND EMAIL FUNCTION
+# ========================
+def send_async_email(user_email, phone):
     try:
-        if not os.path.exists(BID_FILE_PATH):
-            return jsonify([]), 200
+        msg = MIMEMultipart()
+        msg["From"] = SENDER_EMAIL
+        msg["To"] = MANAGER_EMAIL
+        msg["Subject"] = "📱 Phone Number Verified"
 
-        with open(BID_FILE_PATH, "r", encoding="utf-8") as f:
-            return jsonify(json.load(f)), 200
+        body = f"""
+User completed phone verification.
 
-    except Exception as e:
-        print("❌ DATA ERROR:", e)
-        return jsonify({"error": "Failed to load data"}), 500
-
-# =====================================================
-# 📄 PDF PROXY
-# =====================================================
-@app.route("/api/proxy-pdf", methods=["GET"])
-def proxy_pdf():
-    pdf_url = request.args.get("url")
-
-    if not pdf_url:
-        return jsonify({"error": "PDF URL required"}), 400
-
-    try:
-        response = requests.get(
-            pdf_url,
-            headers={"User-Agent": "Mozilla/5.0"},
-            stream=True,
-            timeout=15
-        )
-
-        return Response(
-            response.iter_content(chunk_size=1024),
-            content_type="application/pdf"
-        )
-
-    except Exception as e:
-        print("❌ PDF ERROR:", e)
-        return jsonify({"error": "Unable to fetch PDF"}), 500
-
-# =====================================================
-# 📩 CONTACT FORM API
-# =====================================================
-@app.route("/api/contact", methods=["POST"])
-def contact():
-    data = request.json
-
-    required_fields = ["name", "email", "phone", "message"]
-    if not all(data.get(field) for field in required_fields):
-        return jsonify({"error": "All fields are required"}), 400
-
-    subject = f"📩 New Inquiry from {data['name']}"
-    body = f"""
-Name: {data['name']}
-Email: {data['email']}
-Phone: {data['phone']}
-
-Message:
-{data['message']}
+Email: {user_email}
+Phone: {phone}
 """
+        msg.attach(MIMEText(body, "plain"))
 
-    try:
-        send_email(subject, body)
-        return jsonify({"message": "Email sent successfully"}), 200
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=30)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+
+        print("✅ Verification email sent")
 
     except Exception as e:
-        print("❌ EMAIL ERROR:", e)
-        return jsonify({"error": "Email service failed"}), 500
+        # Email failure must NOT crash API
+        print("❌ Email error:", e)
 
-# =====================================================
-# 📱 PHONE NUMBER UPDATE API (FINAL FIX)
-# =====================================================
+# ========================
+# UPDATE PHONE API
+# ========================
 @app.route("/api/update-phone", methods=["POST"])
 def update_phone():
-    data = request.json
+    try:
+        data = request.get_json(force=True)
+    except Exception:
+        return jsonify({"error": "Invalid JSON payload"}), 400
 
     email = data.get("email")
     phone = data.get("phone")
 
     if not email:
-        return jsonify({"error": "Email is required"}), 400
+        return jsonify({"error": "Email required"}), 400
 
-    if not phone or not phone.isdigit() or len(phone) != 10:
-        return jsonify({"error": "Invalid phone number"}), 400
+    if not phone or not str(phone).isdigit() or len(str(phone)) != 10:
+        return jsonify({"error": "Phone must be exactly 10 digits"}), 400
 
-    subject = "📱 Phone Number Verification Completed"
-    body = f"""
-A user has completed phone verification.
+    # Background email (non-blocking)
+    threading.Thread(
+        target=send_async_email,
+        args=(email, phone),
+        daemon=True
+    ).start()
 
-Email: {email}
-Phone: {phone}
-"""
+    return jsonify({"message": "Phone saved successfully"}), 200
 
-    try:
-        send_email(subject, body)
-        return jsonify({"message": "Phone number saved successfully"}), 200
+# ========================
+# HEALTH CHECK (RENDER NEEDS THIS)
+# ========================
+@app.route("/", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"}), 200
 
-    except Exception as e:
-        print("❌ PHONE EMAIL ERROR:", e)
-        return jsonify({"error": "Failed to save phone number"}), 500
-
-# =====================================================
-# ✉️ EMAIL SENDER (SIMPLE + STABLE)
-# =====================================================
-def send_email(subject, body):
-    msg = MIMEMultipart()
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = MANAGER_EMAIL
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
-
-    server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
-    server.starttls()
-    server.login(SENDER_EMAIL, SENDER_PASSWORD)
-    server.send_message(msg)
-    server.quit()
-
-# =====================================================
-# 🚀 APP START
-# =====================================================
+# ========================
+# RENDER ENTRY POINT
+# ========================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
+    # Render provides PORT automatically
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
