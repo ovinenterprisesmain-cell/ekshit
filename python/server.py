@@ -1381,11 +1381,11 @@
 # app = Flask(__name__)
 
 # ✅ Proper CORS for frontend hosted on another domain
-CORS(
-    app,
-    resources={r"/api/*": {"origins": "*"}},
-    supports_credentials=True
-)
+# CORS(
+#     app,
+#     resources={r"/api/*": {"origins": "*"}},
+#     supports_credentials=True
+# )
 
 # =====================================================
 # 📦 GET BID DATA
@@ -1673,4 +1673,5 @@ if RUN_SCRAPER:
 # ========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
