@@ -765,9 +765,9 @@ import os
 # ========================
 # EMAIL CONFIG
 # ========================
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
-SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD")
-MANAGER_EMAIL = os.environ.get("MANAGER_EMAIL")
+SENDER_EMAIL = os.environ.get("ovinenterprises.main@gmail.com")
+SENDER_PASSWORD = os.environ.get("ixlz wuhy uouu thiz")
+MANAGER_EMAIL = os.environ.get("ovinenterprises.main@gmail.com")
 
 # ========================
 # PATH SETUP
@@ -891,6 +891,7 @@ def contact():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
